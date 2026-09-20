@@ -1,0 +1,40 @@
+{
+  "name": "@meri-imperiumi/signalk-orca-route-provider",
+  "version": "0.1.0",
+  "description": "Signal K plugin serving the Orca Core's active route as the Signal K active route",
+  "main": "plugin/index.js",
+  "scripts": {
+    "lint": "npx @biomejs/biome check --use-editorconfig=true plugin/",
+    "format": "npx @biomejs/biome check --use-editorconfig=true --write plugin/ tests/",
+    "test": "node --test --test-force-exit \"tests/*.test.js\""
+  },
+  "keywords": [
+    "orca",
+    "signalk-node-server-plugin",
+    "signalk-category-navigation"
+  ],
+  "author": "Henri Bergius <henri.bergius@iki.fi>",
+  "license": "EUPL-1.2",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/meri-imperiumi/signalk-orca-route-provider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/meri-imperiumi/signalk-orca-route-provider/issues"
+  },
+  "homepage": "https://github.com/meri-imperiumi/signalk-orca-route-provider#readme",
+  "signalk-plugin-enabled-by-default": false,
+  "signalk": {
+    "displayName": "Orca Route Provider"
+  },
+  "dependencies": {
+    "bonjour-service": "^1.2.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@signalk/server-api": "^2.30.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
