@@ -1,6 +1,6 @@
 # Orca Core route provider for Signal K
 
-This plugin connects to the locally-running Orca Core and provides the current route there as a Signal K active route.
+This plugin connects to the locally-running [Orca Core](https://getorca.com/orca-core/) and provides the current route there as a Signal K active route.
 
 ## Why do we need this?
 
