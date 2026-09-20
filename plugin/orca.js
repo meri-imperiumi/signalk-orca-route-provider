@@ -121,19 +121,13 @@ class OrcaCore extends EventEmitter {
     }
     const ws = this._ws;
     this._ws = null;
-    ws.removeAllListeners();
-    // A socket torn down mid-frame still emits errors after this point
-    // (the Core's close reply can be a malformed frame) — swallow them so
-    // shutting down cannot crash the process.
-    ws.on("error", () => {});
+    // The WHATWG WebSocket has no terminate() — a plain close() is all we
+    // can ask for. Listeners left behind are safe: the close handler ignores
+    // a detached socket and the error handler only logs.
     try {
       ws.close();
     } catch (_err) {
-      try {
-        ws.terminate();
-      } catch {
-        // nothing more to try
-      }
+      // nothing more to try
     }
   }
 
@@ -233,7 +227,9 @@ class OrcaCore extends EventEmitter {
     if (this._stopped || !this._endpoint) {
       return;
     }
-    const WebSocket = this.WebSocketImpl || require("ws");
+    // The built-in WHATWG WebSocket client (Node 22.4+). The constructor
+    // never throws; failures arrive as error and close events.
+    const WebSocket = this.WebSocketImpl || globalThis.WebSocket;
     const { host, wsPort } = this._endpoint;
     this._describe = `${host}:${wsPort}`;
     this._status(`Connecting to the Orca Core at ${this._describe}…`);
@@ -247,7 +243,7 @@ class OrcaCore extends EventEmitter {
     }
     this._ws = ws;
 
-    ws.on("open", () => {
+    ws.addEventListener("open", () => {
       if (this._ws !== ws) {
         return;
       }
@@ -255,11 +251,24 @@ class OrcaCore extends EventEmitter {
       this._status(`Connected to the Orca Core at ${this._describe}`);
       this._fetchRoute();
     });
-    ws.on("message", (data) => this._onSyncMessage(data));
-    ws.on("error", (err) => {
-      this.log.debug(`Orca Core sync connection error: ${err.message}`);
+    ws.addEventListener("message", async (event) => {
+      if (this._ws !== ws) {
+        return;
+      }
+      let data = event.data;
+      // Binary frames arrive as Blobs unless binaryType is changed; the
+      // sync channel speaks JSON text frames, but be tolerant either way.
+      if (data && typeof data.text === "function") {
+        data = await data.text();
+      }
+      this._onSyncMessage(data);
     });
-    ws.on("close", () => {
+    ws.addEventListener("error", (event) => {
+      this.log.debug(
+        `Orca Core sync connection error: ${event.message || "connection failed"}`,
+      );
+    });
+    ws.addEventListener("close", () => {
       if (this._ws !== ws) {
         return;
       }

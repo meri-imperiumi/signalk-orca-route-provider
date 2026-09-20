@@ -1,6 +1,5 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { EventEmitter } = require("node:events");
 
 const { OrcaCore, pickAddress } = require("../plugin/orca");
 
@@ -46,13 +45,37 @@ const HASH_B = "1e937d58e7393a5d2c5b28a9835e8313";
 
 function fakeWebSocketFactory() {
   const sockets = [];
-  // A real EventEmitter, so an "error" emitted with no listener left after
-  // stop() is fatal exactly like it is with ws.
-  class FakeWebSocket extends EventEmitter {
+  // Mimics the built-in WHATWG WebSocket: addEventListener/dispatchEvent
+  // instead of Node's EventEmitter, and no unhandled-error crash — a
+  // dispatched error with no listener is simply dropped.
+  class FakeWebSocket {
     constructor(url) {
-      super();
       this.url = url;
+      this.listeners = new Map();
       sockets.push(this);
+    }
+    addEventListener(type, handler) {
+      if (!this.listeners.has(type)) {
+        this.listeners.set(type, new Set());
+      }
+      this.listeners.get(type).add(handler);
+    }
+    removeEventListener(type, handler) {
+      this.listeners.get(type)?.delete(handler);
+    }
+    dispatchEvent(event) {
+      for (const handler of this.listeners.get(event.type) || []) {
+        handler(event);
+      }
+      return true;
+    }
+    // Test convenience: emit("open") or emit("message", data)
+    emit(type, arg) {
+      const event =
+        arg instanceof Error
+          ? { type, message: arg.message }
+          : { type, data: arg };
+      this.dispatchEvent(event);
     }
     close() {
       this.emit("close");
@@ -320,9 +343,8 @@ test("stop() swallows socket errors fired after teardown", async () => {
 
   core.stop();
 
-  // The Core's reply to our close can be a malformed frame that surfaces as
-  // an error on the detached socket — with no handler left that is a fatal
-  // unhandled "error" event, so the shutdown path must keep one.
+  // The Core's reply to our close can surface as an error event on the
+  // detached socket — that must not throw or crash anything.
   sockets[0].emit("error", new Error("invalid close code"));
 });
 
