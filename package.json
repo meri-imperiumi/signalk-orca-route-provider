@@ -11,7 +11,7 @@
   "keywords": [
     "orca",
     "signalk-node-server-plugin",
-    "signalk-category-navigation"
+    "signalk-category-hardware"
   ],
   "author": "Henri Bergius <henri.bergius@iki.fi>",
   "license": "EUPL-1.2",
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/meri-imperiumi/signalk-orca-route-provider#readme",
   "signalk-plugin-enabled-by-default": false,
   "signalk": {
+    "appIcon": "./doc/appicon.png",
     "displayName": "Orca Route Provider"
   },
   "dependencies": {
