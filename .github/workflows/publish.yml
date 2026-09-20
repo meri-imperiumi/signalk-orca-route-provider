@@ -1,0 +1,38 @@
+name: Publish Node.js Package
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.0.2
+      - uses: actions/setup-node@v3.1.1
+        with:
+          node-version: 24
+          package-manager-cache: false  # never use caching in release builds
+      - run: npm install
+      - name: Install Python RNS/LXMF for the interop smoketest
+        # Deliberately pinned (see test.yml): the release gate must exercise
+        # the crew-delivery path against the same Python stack the boat runs.
+        run: python3 -m pip install --user --break-system-packages rns==1.5.4 lxmf==1.0.1
+      - run: npm test
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.0.2
+      - uses: actions/setup-node@v3.1.1
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false  # never use caching in release builds
+      - run: npm publish

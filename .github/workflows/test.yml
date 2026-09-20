@@ -1,0 +1,26 @@
+name: Node CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.x]
+    steps:
+    - uses: actions/checkout@v3.0.2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3.1.1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - name: Install Python RNS/LXMF for the interop smoketest
+      # Deliberately pinned: these are the versions the interop gate was
+      # validated against. Bumping them is a deliberate interop decision,
+      # not something CI should pick up silently.
+      run: python3 -m pip install --user --break-system-packages rns==1.5.4 lxmf==1.0.1
+    - run: npm test
+      env:
+        CI: true
