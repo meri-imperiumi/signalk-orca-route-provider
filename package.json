@@ -25,7 +25,7 @@
   "homepage": "https://github.com/meri-imperiumi/signalk-orca-route-provider#readme",
   "signalk-plugin-enabled-by-default": false,
   "signalk": {
-    "appIcon": "./doc/appicon.png",
+    "appIcon": "./doc/appicon-256.png",
     "displayName": "Orca Route Provider"
   },
   "dependencies": {
