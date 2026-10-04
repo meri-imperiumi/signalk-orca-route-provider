@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-05
 ### Fixed
 - Routes spanning the antimeridian are now measured the short way round. Leg lengths, the served route `distance` and the nearest-point start of course activation were computed from unwrapped longitude differences, reporting whole-earth distances (some 40,000 km for a 40 km crossing) and activating from the wrong route point for vessels near the line
 ### Changed

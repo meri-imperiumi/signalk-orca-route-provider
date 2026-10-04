@@ -1,6 +1,6 @@
 {
   "name": "@meri-imperiumi/signalk-orca-route-provider",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Signal K plugin serving the Orca Core's active route as the Signal K active route",
   "main": "plugin/index.js",
   "scripts": {
