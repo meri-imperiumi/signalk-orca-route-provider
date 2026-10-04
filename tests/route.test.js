@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const {
   extractRoute,
+  legMetres,
   nearestPointIndex,
   routeIdentity,
   routeLengthM,
@@ -27,6 +28,30 @@ const orcaBody = {
         },
         properties: {
           hash: "dfb4ce6f465e7c4967e17ba0539ee2ac",
+          updatedAt: 1789868902005,
+        },
+      },
+    ],
+  },
+};
+
+// Tongatapu to Nadi, crossing the antimeridian mid-route.
+const crossingBody = {
+  value: {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [-175.16, -21.14],
+            [-178.0, -19.6],
+            [177.42, -17.76],
+          ],
+        },
+        properties: {
+          hash: "1f0c15e0e56a4d0fb3fd6bd6dbb35d1e",
           updatedAt: 1789868902005,
         },
       },
@@ -114,6 +139,58 @@ test("routeLengthM sums the legs", () => {
     ]),
     111195,
   );
+});
+
+test("legMetres measures antimeridian crossings the short way round", () => {
+  // 0.1° apart across the line, measured in both directions.
+  assert.equal(Math.round(legMetres([179.95, 0], [-179.95, 0])), 11119);
+  assert.equal(Math.round(legMetres([-179.95, 0], [179.95, 0])), 11119);
+
+  // The same separation measured on one side of the line, for scale.
+  assert.equal(Math.round(legMetres([179.9, 0], [180, 0])), 11119);
+
+  // The east-west term scales with the cosine of the latitude.
+  assert.equal(Math.round(legMetres([179.9, 60], [-179.9, 60])), 11119);
+});
+
+test("routeLengthM follows routes spanning the antimeridian", () => {
+  // Two 0.2° legs, one of them crossing the line.
+  assert.equal(
+    routeLengthM([
+      [179.9, 0],
+      [-179.9, 0],
+      [-179.7, 0],
+    ]),
+    44478,
+  );
+});
+
+test("nearestPointIndex works across the antimeridian", () => {
+  // The vessel is 0.1° west across the line from point 0; the other points
+  // are on the vessel's side but roughly ten times farther away.
+  const coordinates = [
+    [179.95, 0],
+    [-179.0, 0],
+    [-178.9, 0],
+  ];
+  assert.equal(
+    nearestPointIndex(coordinates, { longitude: -179.95, latitude: 0 }),
+    0,
+  );
+});
+
+test("a route spanning the antimeridian is served with a sane distance", () => {
+  const route = extractRoute(crossingBody);
+  assert.ok(route);
+  assert.deepEqual(
+    route.coordinates,
+    crossingBody.value.features[0].geometry.coordinates,
+  );
+
+  // Tongatapu to Nadi is roughly 470 nm; measuring the longitude difference
+  // unwrapped would report some 22,000 nm.
+  const resource = toSignalKRoute(route, "signalk-orca-route-provider");
+  assert.equal(resource.distance, 866039);
 });
 
 test("nearestPointIndex picks the closest point to the vessel", () => {

@@ -176,6 +176,27 @@ test("the course starts from the point nearest the vessel", async () => {
   plugin.stop();
 });
 
+test("an antimeridian route activates from the point nearest a vessel across the line", async () => {
+  const { plugin, core, state } = startPlugin();
+  state.selfPath["navigation.position"] = {
+    value: { latitude: 0, longitude: -179.95 },
+  };
+  core.emit("route", {
+    hash: "1f0c15e0e56a4d0fb3fd6bd6dbb35d1e",
+    updatedAt: 1789868902005,
+    coordinates: [
+      [179.95, 0],
+      [-179.0, 0],
+      [-178.9, 0],
+    ],
+  });
+
+  // The vessel is 0.1° west across the antimeridian from point 0; point 1
+  // is on the vessel's side but roughly ten times farther away.
+  assert.equal(state.activated[0].pointIndex, 0);
+  plugin.stop();
+});
+
 test("the served route is read-only", async () => {
   const { plugin, core, state } = startPlugin();
   core.emit("route", ROUTE);

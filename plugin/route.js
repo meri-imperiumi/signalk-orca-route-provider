@@ -4,11 +4,14 @@ const EARTH_RADIUS_M = 6371000;
 const METRES_PER_NM = 1852;
 
 // Equirectangular approximation — plenty accurate over the length of a route
-// leg, and cheap enough to run over every point pair.
+// leg, and cheap enough to run over every point pair. The longitude
+// difference is wrapped into [-180, 180] so legs spanning the antimeridian
+// are measured the short way round.
 function legMetres(a, b) {
   const la = (a[1] * Math.PI) / 180;
   const lb = (b[1] * Math.PI) / 180;
-  const x = (((b[0] - a[0]) * Math.PI) / 180) * Math.cos((la + lb) / 2);
+  const dlon = ((((b[0] - a[0]) % 360) + 540) % 360) - 180;
+  const x = ((dlon * Math.PI) / 180) * Math.cos((la + lb) / 2);
   const y = lb - la;
   return Math.sqrt(x * x + y * y) * EARTH_RADIUS_M;
 }

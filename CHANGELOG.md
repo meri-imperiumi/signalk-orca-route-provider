@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- Routes spanning the antimeridian are now measured the short way round. Leg lengths, the served route `distance` and the nearest-point start of course activation were computed from unwrapped longitude differences, reporting whole-earth distances (some 40,000 km for a 40 km crossing) and activating from the wrong route point for vessels near the line
 ### Changed
 - Replaced the `ws` WebSocket client with Node's built-in `WebSocket` (WHATWG API), removing the only runtime dependency besides `bonjour-service`. Requires Node 22.4 or newer (was 18)
 
